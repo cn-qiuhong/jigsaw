@@ -840,7 +840,7 @@ var Tina = function (ops) {
 	T.assets = {};
 
 	T.getAsset = function (name) {
-		if (!T.assets[name]) {
+		if (name!=null&&!T.assets[name]) {
 			console.log("Error get asset: " + name);
 		}
 		return T.assets[name];
