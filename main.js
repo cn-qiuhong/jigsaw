@@ -7,13 +7,6 @@ var info_screen0 = {
 	w: window.innerWidth,
 	h: window.innerHeight
 };
-// var info_screen0 = {
-// w: Math.min(window.innerWidth, 1280),
-// h: Math.min(window.innerHeight, 720)
-// };
-//画布偏移量
-// var canvas_x = (window.innerWidth - info_screen0.w) / 2;
-// var canvas_y = (window.innerHeight - info_screen0.h) / 2;
 //判断是否是移动端
 var bro = function () {
 	var browser = navigator.userAgent;
@@ -46,7 +39,7 @@ var main = function () {
 		})
 		.controls();
 
-	var picture_c, stage_g, level, down_g = false, part_g, maxlevel, record, bgmusic, duihuaindex;
+	var picture_c, stage_g, level, down_g = false, part_g, maxlevel, record, bgmusic, duihuaindex, clear_g, addedclear;
 	var data_g = [
 		[
 			[{
@@ -132,7 +125,7 @@ var main = function () {
 				wh: 'rain',
 				index: 7,
 				x: 1150,
-				y: 617
+				y: 614
 			}, {
 				asset: '1_nl4.png',
 				w: 238,
@@ -509,16 +502,15 @@ var main = function () {
 		[],
 		['en_changjinglu.mp3', 'en_daishu.mp3', 'en_houzi.mp3', null, 'en_xiong.mp3'],
 		[],
-		['en_quanjiafu.mp3', 'en_beizi.mp3', 'en_maoxian.mp3', 'en_maomi.mp3', 'en_tanzi.mp3', 'en_maoyi.mp3']
+		['en_quanjiafu.mp3', null, 'en_maoxian.mp3', 'en_maomi.mp3', 'en_tanzi.mp3', 'en_maoyi.mp3']
 	];
 	var dcimg = [
 		['dckuzi.png', 'dcwazi.png', 'dcxiezi.png', 'dcyifu.png', 'dckuzi.png', 'dcwazi.png', 'dcxiezi.png', 'dcyifu.png'],
 		['dcyagao.png', 'dcyashua.png', 'dccup.png', 'dcshuzi.png', 'dcxiangzao.png', 'dcreshui.png', 'dcmaojin.png'],
-		[],
-		[],
+		['dcchangjinglu.png', 'dcdaishu.png', 'dchouzi.png', 'dclang.png', 'dcxiong.png'],
+		['dcgaotie.png', 'dcgongjiaoche.png', 'dcjiaoche.png', 'dcjingche.png', 'dcxiaofangche.png', 'dczixingche.png'],
 		['dcquanjiafu.png', 'dccup.png', 'dcmaoxiantuan.png', 'dcmaomi.png', 'dctanzi.png', 'dcmaoyi.png']
 	];
-	//(1)类
 
 	//动画播放
 	var AnimPlayer = T.Entity.extend({
@@ -540,7 +532,6 @@ var main = function () {
 		down: function () {
 		}
 	});
-
 	//按钮
 	var Button = T.Sprite.extend({
 		z: 10,
@@ -553,7 +544,6 @@ var main = function () {
 		down: function () {
 		}
 	});
-
 	//背景,每关的拼图背景在此处设置
 	var Background = T.Sprite.extend({
 		init: function () {
@@ -623,426 +613,6 @@ var main = function () {
 		}
 	});
 
-	var Duihuakuang = T.Sprite.extend({
-		w: 400,
-		h: 260,
-		x: 780,
-		y: 270,
-		z: 120,
-		over: false,
-		init: function () {
-			switch (duihuaindex) {
-				case 1:
-					if (record.weather == 'sun') {
-						this.asset = 'dh1qing.png';
-						this.yuyin = T.getAsset('1qing.mp3');
-						if (this.yuyin) this.yuyin.play();
-					} else {
-						this.asset = 'dh1yu.png';
-						this.yuyin = T.getAsset('1yu.mp3');
-						if (this.yuyin) this.yuyin.play();
-					}
-					break;
-			}
-			if (duihuaindex > 1) {
-				this.asset = 'dh' + duihuaindex + '.png';
-				this.yuyin = T.getAsset(duihuaindex + '.mp3');
-				if (this.yuyin) this.yuyin.play();
-			}
-			duihuaindex++;
-		},
-		update: function () {
-			if (this.yuyin && this.yuyin.ended) {
-				this.over = true;
-			}
-		}
-	});
-	//游戏完成
-	var GameClear = T.Sprite.extend({
-		asset: 'clear.png',
-		w: 353,
-		h: 108,
-		center: {
-			x: 176,
-			y: 54
-		},
-		x: 640,
-		y: 300,
-		z: 5,
-		init: function () {
-			this.oldw = this.w;
-			this.oldh = this.h;
-			this.oldcx = this.center.x;
-			this.oldcy = this.center.y;
-			this.on("added", function () {
-				console.log("恭喜过关");
-				this.w /= 10;
-				this.h /= 10;
-				this.center.x /= 10;
-				this.center.y /= 10;
-			});
-			if (record == null) record = {};
-			if (record.level == null) record.level = 1;
-			if (record.level <= level) record.level = level + 1;
-			setStorage();
-		},
-		update: function () {
-			if (this.w < this.oldw) {
-				this.w *= 1.1;
-				this.h *= 1.1;
-				this.center.x *= 1.1;
-				this.center.y *= 1.1;
-			} else if (level < maxlevel) {
-				if (++level < maxlevel) {
-					var next = new Button({
-						x: 690,
-						y: 400,
-						asset: 'next.png',
-						w: 200,
-						h: 100
-					});
-					next.down = function () {
-						T.stageScene('newgame');
-					};
-					this.parent.add(next);
-				} else {
-					this.parent.add(new Lurenjia());
-				}
-				var again = new Button({
-					x: 390,
-					y: 400,
-					asset: 'onceagain.png',
-					w: 200,
-					h: 100
-				});
-				this.parent.add(again);
-				again.down = function () {
-					level--;
-					T.stageScene('game');
-				};
-				if (level != maxlevel) stage_g.pause();
-			}
-		}
-	});
-
-	var Lurenjia = AnimPlayer.extend({
-		timing: 0,
-		w: 400,
-		h: 567,
-		x: 1500,
-		y: 620,
-		center: {
-			x: 200,
-			y: 283
-		},
-		rotation: -30,
-		over: false,
-		init: function (ops) {
-			this._super(ops);
-			if (record.sex == 'boy') {
-				this.setAnimSheet("sheet_nanhai", "nanhai");
-			} else if (record.sex == 'girl') {
-				this.setAnimSheet("sheet_nvhai", 'nvhai');
-			}
-		},
-		action: function () {
-			if (this.x > 1120) this.x -= 10;
-			else if (!this.open) {
-				this.open = true;
-				this.dh = new Duihuakuang();
-				this.parent.add(this.dh);
-			}
-			if (Math.floor(this.timing / 20) < 4) this.play('idle');
-			else if (Math.floor(this.timing / 20) < 5) this.play("anim");
-			else this.timing = 0;
-			this.timing++;
-			if (this.dh && this.dh.over) this.over = true;
-		}
-	});
-
-	//开头动画
-	var OP = T.Entity.extend({
-		time: 120, //set how long goto t.scene('ready')
-		timing: 0,
-		z: 10,
-		x: 420,
-		y: 50,
-		init: function () {
-			this.merge("frameAnim");
-			this.setAnimSheet("sheet_kaipian", "kaipian");
-			this.on("added", function () {
-				this.parent.add(new T.Sprite({
-					asset: 'kaichang_b.png',
-					w: 1280,
-					h: 720,
-					z: 5
-				}));
-				var kcanim = new AnimPlayer({
-					z: 11,
-					time: 40 //set how long animplay
-				});
-				kcanim.setAnimSheet("sheet_kcanim", "kcanim");
-				var op = this;
-				kcanim.action = function () {
-					if (this.timing < this.time) {
-						this.play("anim");
-						this.timing++;
-					} else {
-						this.play("idle");
-						op.timing++;
-						if (op.timing == 1) {
-							op.hdkj = new T.Sprite({
-								asset: 'heidaokeji.png',
-								w: 290,
-								h: 112,
-								x: -300,
-								y: 500,
-								z: 15
-							});
-							this.parent.add(op.hdkj);
-							op.hxgzs = new T.Sprite({
-								asset: 'huoxuangongzuoshi.png',
-								w: 490,
-								h: 61,
-								x: 1300,
-								y: 650,
-								z: 15
-							});
-							this.parent.add(op.hxgzs);
-						}
-					}
-				};
-				this.parent.add(kcanim);
-			});
-		},
-		update: function (dt) {
-			this._super(dt);
-			if (this.timing > 0) {
-				if (this.timing > this.time) {
-					T.stageScene('ready');
-				}
-				this.play('anim');
-				if (this.hdkj.x < 465) this.hdkj.x += 13;
-				if (this.hxgzs.x > 410) this.hxgzs.x -= 15;
-			} else {
-				this.play('idle');
-			}
-		}
-	});
-
-	//图片需要拼的一小部分
-	var Part = T.Sprite.extend({
-		down: false,
-		ok: false,
-		movetarget: null,
-		rw: null,
-		rh: null,
-		z: 10,
-		ratio_w: 1,
-		ratio_h: 1,
-		wh: null,
-		index: null,
-		init: function (ops) {
-			this._super(ops);
-			this.oldw = this.w;
-			this.oldh = this.h;
-			this.oldcx = this.center.x;
-			this.oldcy = this.center.y;
-			if (this.w > 130) this.ratio_w = 130 / this.w;
-			if (this.h > 150) this.ratio_h = 150 / this.h;
-			this.w *= this.ratio_w;
-			this.center.x *= this.ratio_w;
-			this.h *= this.ratio_h;
-			this.center.y *= this.ratio_h;
-			this.audioen = T.getAsset(audio_en[level][this.index - 1]);
-			this.on("down", function (e) {
-				if (this.ok) return;
-				if (stage_g.paused) return;
-				down_g = true;
-				part_g = this;
-				this.w = this.oldw;
-				this.h = this.oldh;
-				this.center.x = this.oldcx;
-				this.center.y = this.oldcy;
-				this.x = e.pos.x;
-				this.y = e.pos.y;
-				this.z += 5;
-				if (this.audioen) {
-					//bgmusic.pause();
-					//bgmusic.defaultMuted = true;
-					bgmusic.volume = 0.1;
-					this.audioen.play();
-				}
-				if (this.dc) {
-					this.dc.z = 15;
-					this.dc.x = this.x;
-					this.dc.y = this.y - (this.h + this.dc.h) / 2;
-				}
-			});
-			this.dc = new T.Sprite({
-				asset: dcimg[level][this.index - 1],
-				z: -5,
-				w: 250,
-				h: 120,
-				center: {
-					x: 125,
-					y: 60
-				}
-			});
-			this.dc.x = this.x;
-			this.dc.y = this.y - (this.h + this.dc.h) / 2;
-			if (level == 0 && (this.index == 1 || this.index == 5)) this.dc.asset = 'dcqunku.png';
-			stage_g.add(this.dc);
-			this.audio = T.getAsset(audio_path[level][this.index - 1]);
-		},
-		//向目标移动
-		update: function () {
-			if (this.movetarget) {
-				var b = this.movetarget;
-				this.tx = b.x;
-				this.ty = b.y;
-				this.z = 3;
-				var x_cha = Math.abs(this.x - b.x);
-				var y_cha = Math.abs(this.y - b.y);
-				var x_yd = 3;
-				var y_yd = x_yd * (y_cha / x_cha);
-				if (this.x > b.x + 2) this.x -= x_yd;
-				if (this.x < b.x - 2) this.x += x_yd;
-				if (this.y > b.y + 2) this.y -= y_yd;
-				if (this.y < b.y - 2) this.y += y_yd;
-				if (Math.abs(this.x - b.x) < 3 && Math.abs(this.y - b.y) < 3) {
-					var anim = new AnimPlayer({
-						x: this.x,
-						y: this.y,
-						w: 177,
-						h: 474,
-						center: {
-							x: 88,
-							y: 237
-						}
-					});
-					anim.setAnimSheet("sheet_buling", "buling");
-					anim.action = function () {
-						this.play('anim');
-						if (this.timing > this.time) this.parent.remove(this);
-						this.timing++;
-					};
-					this.parent.add(anim);
-					this.movetarget = null;
-					if (this.audio) {
-						//bgmusic.defaultMuted = true;
-						//bgmusic.pause();
-						bgmusic.volume = 0.1;
-						this.audio.play();
-					}
-					if (this.dc) this.parent.remove(this.dc);
-					//过关检测
-					if (picture_c.parts.length == 0) this.parent.add(new GameClear());
-				}
-			}
-			if (this.ok) {
-				this.x = this.tx;
-				this.y = this.ty;
-			}
-			if (!((this.audio && !this.audio.ended) || (this.audioen && !this.audioen.ended))) {
-				console.log(this.audio+",");
-				bgmusic.volume = 1;
-				//bgmusic.defaultMuted = false;
-				//bgmusic.play();
-			}
-		},
-		setOldxy: function (x, y) {
-			this.oldx = x;
-			this.oldy = y;
-			this.x = x;
-			this.y = y;
-		}
-	});
-
-	//图片，有空白的整张图片,空白处留着拼
-	var Picture = T.Sprite.extend({
-		init: function (ops) {
-			this._super(ops);
-			this.on("added", function () {
-				var stage = this.parent;
-				var length, data = [];
-				if (level == 0) {
-					length = 8;
-					if (record.sex == 'boy') data = data_g[0][0].concat();
-					else data = data_g[0][1].concat();
-				} else {
-					length = data_g[level].length;
-					data = data_g[level].concat();
-				}
-				this.parts = [];
-				var i, x, y, temp = [];
-				for (i = 0; i < data.length; i++) {
-					temp[i] = i;
-				}
-				temp.sort(function (a, b) {
-					return Math.random() > 0.5 ? -1 : 1;
-				});
-				for (i = 0; i < length; i++) { //添加需要拼的数量个拼图
-					if (level == 0) {
-						if (record.weather == 'sun' && i < 4) this.parts.push(data[i]);
-						else if (record.weather == 'rain' && i > 3) this.parts.push(data[i]);
-					} else this.parts.push(data[i]);
-					var part = new Part(data[temp[i]]);
-					x = 140 * (i % 2) + 70;
-					y = 180 * Math.floor(i / 2) + 100;
-					part.setOldxy(x, y);
-					stage.add(part);
-				}
-				i = length;//需要添加在图片中的拼图的起点
-				for (; i < length; i++) { //不需要拼的全部显示出来
-					var qita = new T.Sprite(data[i]);
-					qita.z = 2;
-					stage.add(qita);
-				}
-			});
-		}
-	});
-
-	var Text = T.CText.extend({
-		size: 40,
-		width: 400,
-		init: function () {
-			var text, ops;
-			this._super(text, ops);
-			this.setSize(this.size);
-			this.maxrow = Math.ceil(text.length * this.size / this.width);
-			if (this.maxrow > 1) {
-				this.numperrow = this.width / this.size;
-				this.texts = [];
-				for (var i = 0; i < this.maxrow; i++) {
-					this.texts[i] = text.substr(i * this.numperrow, this.numperrow);
-				}
-			}
-		},
-		render: function (ctx) {
-			if (!ctx) {
-				ctx = this.ctx;
-			}
-			ctx.save();
-			ctx.translate(this.x, this.y);
-			ctx.rotate(this.rotation * Math.PI / 180);
-			ctx.scale(this.scale.x, this.scale.y);
-			ctx.globalAlpha = this.alpha;
-			ctx.fillStyle = this.color;
-			ctx.textAlign = this.align;
-			ctx.textBaseline = this.baseline;
-			ctx.font = this._rfont;
-			if (this.maxrow < 2) ctx.fillText(this._text, 0, 0);
-			else {
-				for (var i = 0; i < this.maxrow; i++) {
-					ctx.fillText(this.texts[i], 0, i * this.size);
-				}
-			}
-			ctx.restore();
-			this.emit("render", ctx);
-		}
-	});
-
 	var ChooseLevel = T.Sprite.extend({
 		asset: 'xuanzebeijing.png',
 		w: 1280,
@@ -1058,6 +628,7 @@ var main = function () {
 					h: 423,
 					x: 830,
 					y: 300,
+					z: 1,
 					alpha: 0.9
 				}));
 				stage.add(new T.Sprite({
@@ -1066,6 +637,7 @@ var main = function () {
 					h: 423,
 					x: -50,
 					y: 300,
+					z: 1,
 					alpha: 0.9
 				}));
 				stage.add(new T.Sprite({
@@ -1073,7 +645,8 @@ var main = function () {
 					w: 643,
 					h: 481,
 					x: 300,
-					y: 150
+					y: 150,
+					z: 2
 				}));
 				var d1g = new Button({
 					w: 192,
@@ -1153,11 +726,388 @@ var main = function () {
 					T.stageScene('ready');
 				};
 				stage.add(fanhui);
-				stage.add(new T.Sprite({asset:'jiantou.png',w:285,h:246,x:480,y:320}));
+				stage.add(new T.Sprite({asset: 'jiantou.png', w: 285, h: 246, x: 480, y: 320}));
 			});
 		}
 	});
-	//(2)场景
+
+	var Duihuakuang = T.Sprite.extend({
+		w: 400,
+		h: 260,
+		x: 780,
+		y: 300,
+		z: 120,
+		over: false,
+		volume: 0.4,
+		init: function () {
+			switch (duihuaindex) {
+				case 1:
+					if (record.weather == 'sun') {
+						this.asset = 'dh1qing.png';
+						this.yuyin = T.getAsset('1qing.mp3');
+						if (this.yuyin) {
+							bgmusic.volume = this.volume;
+							this.yuyin.play();
+						}
+					} else {
+						this.asset = 'dh1yu.png';
+						this.yuyin = T.getAsset('1yu.mp3');
+						if (this.yuyin) {
+							bgmusic.volume = this.volume;
+							this.yuyin.play();
+						}
+					}
+					break;
+			}
+			if (duihuaindex > 1) {
+				this.asset = 'dh' + duihuaindex + '.png';
+				this.yuyin = T.getAsset(duihuaindex + '.mp3');
+				if (this.yuyin) {
+					bgmusic.volume = this.volume;
+					this.yuyin.play();
+				}
+			}
+			duihuaindex++;
+		},
+		update: function () {
+			if (this.yuyin && this.yuyin.currentTime && this.yuyin.ended) {
+				this.over = true;
+				if (bgmusic.volume <= 0.9)    bgmusic.volume += 0.1;
+			}
+		}
+	});
+	//游戏完成
+	var GameClear = T.Sprite.extend({
+		asset: 'clear.png', w: 353, h: 108, center: {
+			x: 176,
+			y: 54
+		}, x: 640, y: 300, z: 5, added: false,
+		init: function () {
+			clear_g = true;
+			this.oldw = this.w;
+			this.oldh = this.h;
+			this.oldcx = this.center.x;
+			this.oldcy = this.center.y;
+			this.on("added", function () {
+				console.log("恭喜过关");
+				this.w /= 10;
+				this.h /= 10;
+				this.center.x /= 10;
+				this.center.y /= 10;
+			});
+			if (record == null) record = {};
+			if (record.level == null) record.level = 1;
+			if (record.level <= level) record.level = level + 1;
+			setStorage();
+			level++;
+		},
+		update: function () {
+			if (this.w < this.oldw) {
+				this.w *= 1.1;
+				this.h *= 1.1;
+				this.center.x *= 1.1;
+				this.center.y *= 1.1;
+			} else if (!this.added) {
+				this.added = true;
+				if (level < maxlevel) {
+					var next = new Button({
+						x: 690,
+						y: 400,
+						asset: 'next.png',
+						w: 200,
+						h: 100
+					});
+					next.down = function () {
+						T.stageScene('newgame');
+					};
+					this.parent.add(next);
+				} else {
+					this.parent.add(new Lurenjia());
+				}
+				var again = new Button({
+					x: 390,
+					y: 400,
+					asset: 'onceagain.png',
+					w: 200,
+					h: 100
+				});
+				this.parent.add(again);
+				again.down = function () {
+					level--;
+					T.stageScene('game');
+				};
+			}
+		}
+	});
+
+	var Lurenjia = AnimPlayer.extend({
+		timing: 0,
+		w: 400,
+		h: 567,
+		x: 1500,
+		y: 620,
+		tx: 1150,
+		center: {
+			x: 200,
+			y: 283
+		},
+		rotation: -30,
+		over: false,
+		init: function (ops) {
+			this._super(ops);
+			if (record.sex == 'boy') {
+				this.setAnimSheet("sheet_nanhai", "nanhai");
+			} else if (record.sex == 'girl') {
+				this.setAnimSheet("sheet_nvhai", 'nanhai');
+			}
+		},
+		action: function () {
+			if (this.x > this.tx) this.x -= 10;
+			else if (!this.open) {
+				this.open = true;
+				this.dh = new Duihuakuang();
+				this.parent.add(this.dh);
+			}
+			if (Math.floor(this.timing / 20) < 4) this.play('idle');
+			else if (Math.floor(this.timing / 20) < 5) this.play("anim");
+			else this.timing = 0;
+			this.timing++;
+			if (this.dh && this.dh.over) this.over = true;
+		}
+	});
+	//开头动画
+	var OP = T.Entity.extend({
+		time: 120, //set how long goto t.scene('ready')
+		timing: 0,
+		z: 10,
+		x: 420,
+		y: 50,
+		init: function () {
+			this.merge("frameAnim");
+			this.setAnimSheet("sheet_kaipian", "kaipian");
+			this.on("added", function () {
+				this.parent.add(new T.Sprite({
+					asset: 'kaichang_b.png',
+					w: 1280,
+					h: 720,
+					z: 5
+				}));
+				this.hdkj = new T.Sprite({
+					asset: 'heidaokeji.png', w: 290, h: 112, x: -350, y: 500, z: 15
+				});
+				this.parent.add(this.hdkj);
+				this.hxgzs = new T.Sprite({
+					asset: 'huoxuangongzuoshi.png', w: 490, h: 61, x: 1350, y: 650, z: 15
+				});
+				this.parent.add(this.hxgzs);
+				this.kcanim = new AnimPlayer({
+					z: 11, time: 40 //set how long animplay
+				});
+				this.kcanim.setAnimSheet("sheet_kcanim", "kcanim");
+				this.kcanim.action = function () {
+					if (this.timing == 0) {
+						this.play('ready');
+					} else if (this.timing < this.time) {
+						this.play("anim");
+						this.timing++;
+					} else {
+						this.play("idle");
+					}
+				};
+				this.parent.add(this.kcanim);
+			});
+		},
+		update: function (dt) {
+			this._super(dt);
+			this.timing++;
+			if (this.timing > this.time) {
+				T.stageScene('ready');
+			}
+			this.play('anim');
+			if (this.hdkj.x < 465) {
+				this.hdkj.x += 16;
+				//console.log('hd');
+			}
+			if (this.hxgzs.x > 410) {
+				this.hxgzs.x -= 19;
+				//console.log("hx");
+			}
+			if (this.timing == 8)this.kcanim.timing = 1;
+		}
+	});
+	//图片需要拼的一小部分
+	var Part = T.Sprite.extend({
+		ok: false, movetarget: null, rw: null, rh: null, z: 10, ratio_w: 1,
+		ratio_h: 1, wh: null, index: null, volume: 0.1, x_yd: 3,
+		init: function (ops) {
+			this._super(ops);
+			this.oldw = this.w;
+			this.oldh = this.h;
+			this.oldcx = this.center.x;
+			this.oldcy = this.center.y;
+			if (this.w > 130) this.ratio_w = 130 / this.w;
+			if (this.h > 150) this.ratio_h = 150 / this.h;
+			this.w *= this.ratio_w;
+			this.center.x *= this.ratio_w;
+			this.h *= this.ratio_h;
+			this.center.y *= this.ratio_h;
+			this.audioen = T.getAsset(audio_en[level][this.index - 1]);
+			this.audio = T.getAsset(audio_path[level][this.index - 1]);
+			this.on("down", function (e) {
+				if (this.ok) return;
+				down_g = true;
+				part_g = this;
+				this.w = this.oldw;
+				this.h = this.oldh;
+				this.center.x = this.oldcx;
+				this.center.y = this.oldcy;
+				this.x = e.pos.x;
+				this.y = e.pos.y;
+				this.z += 5;
+				if (this.audioen) {
+					bgmusic.volume = this.volume;
+					this.audioen.play();
+				}
+				if (this.dc) {
+					this.dc.z = 15;
+					this.dc.x = this.x;
+					this.dc.y = this.y - (this.h + this.dc.h) / 2;
+				}
+			});
+			this.dc = new T.Sprite({
+				asset: dcimg[level][this.index - 1],
+				z: -5,
+				w: 250,
+				h: 120,
+				center: {
+					x: 125,
+					y: 60
+				}
+			});
+			this.dc.x = this.x;
+			this.dc.y = this.y - (this.h + this.dc.h) / 2;
+			if (level == 0 && record.sex == 'girl' && (this.index == 1 || this.index == 5)) this.dc.asset = 'dcqunku.png';
+			stage_g.add(this.dc);
+		},
+		//向目标移动
+		update: function () {
+			if (this.movetarget) {
+				var b = this.movetarget;
+				this.tx = b.x;
+				this.ty = b.y;
+				this.z = 3;
+				var x_cha = Math.abs(this.x - b.x);
+				var y_cha = Math.abs(this.y - b.y);
+				var x_yd = this.x_yd;
+				var y_yd = x_yd * (y_cha / x_cha);
+				if (y_yd > x_yd * 2)y_yd = x_yd * 2;
+				if (this.x > b.x + 2) this.x -= x_yd;
+				else if (this.x < b.x - 2) this.x += x_yd;
+				if (this.y > b.y + 2) this.y -= y_yd;
+				else if (this.y < b.y - 2) this.y += y_yd;
+				console.log("x:" + this.x + ",y:" + this.y);
+				if (this.dc) {
+					this.dc.z = 15;
+					this.dc.x = this.x;
+					this.dc.y = this.y - (this.h + this.dc.h) / 2;
+				}
+				if (Math.abs(this.x - b.x) < 10 && Math.abs(this.y - b.y) < 10) {
+					var anim = new AnimPlayer({
+						x: this.x,
+						y: this.y,
+						w: 177,
+						h: 474,
+						center: {
+							x: 88,
+							y: 237
+						}
+					});
+					anim.setAnimSheet("sheet_buling", "buling");
+					anim.action = function () {
+						this.play('anim');
+						if (this.timing > this.time) this.parent.remove(this);
+						this.timing++;
+					};
+					this.parent.add(anim);
+					this.movetarget = null;
+					if (this.audio) {
+						bgmusic.volume = this.volume;
+						this.audio.play();
+					}
+					if (this.dc) {
+						this.dc.z = -5;
+						this.parent.remove(this.dc);
+					}
+					//过关检测
+					if (picture_c.parts.length == 0 && !addedclear) {
+						this.parent.add(new GameClear());
+						addedclear = true;
+					}
+				}
+			} else if (this.ok) {
+				this.x = this.tx;
+				this.y = this.ty;
+				if (this.dc) {
+					this.dc.z = -5;
+					this.parent.remove(this.dc);
+				}
+			}
+			if ((this.audio && this.audio.currentTime && !this.audio.ended) ||
+				(this.audioen && this.audioen.currentTime && !this.audioen.ended)) {
+				bgmusic.volume = this.volume;
+			} else if (bgmusic.volume <= 0.9)    bgmusic.volume += 0.1;
+		},
+		setOldxy: function (x, y) {
+			this.oldx = x;
+			this.oldy = y;
+			this.x = x;
+			this.y = y;
+		}
+	});
+	//图片，有空白的整张图片,空白处留着拼
+	var Picture = T.Sprite.extend({
+		init: function (ops) {
+			this._super(ops);
+			this.on("added", function () {
+				var stage = this.parent;
+				var length, data = [];
+				if (level == 0) {
+					length = 8;
+					if (record.sex == 'boy') data = data_g[0][0].concat();
+					else data = data_g[0][1].concat();
+				} else {
+					length = data_g[level].length;
+					data = data_g[level].concat();
+				}
+				this.parts = [];
+				var i, x, y, temp = [];
+				for (i = 0; i < data.length; i++) {
+					temp[i] = i;
+				}
+				temp.sort(function (a, b) {
+					return Math.random() > 0.5 ? -1 : 1;
+				});
+				for (i = 0; i < length; i++) { //添加需要拼的数量个拼图
+					if (level == 0) {
+						if (record.weather == 'sun' && i < 4) this.parts.push(data[i]);
+						else if (record.weather == 'rain' && i > 3) this.parts.push(data[i]);
+					} else this.parts.push(data[i]);
+					var part = new Part(data[temp[i]]);
+					x = 140 * (i % 2) + 70;
+					y = 180 * Math.floor(i / 2) + 100;
+					part.setOldxy(x, y);
+					stage.add(part);
+				}
+				i = length;//需要添加在图片中的拼图的起点
+				for (; i < length; i++) { //不需要拼的全部显示出来
+					var qita = new T.Sprite(data[i]);
+					qita.z = 2;
+					stage.add(qita);
+				}
+			});
+		}
+	});
+
 
 	//加载，显示吉祥物
 	T.scene("load", new T.Scene(function (stage) {
@@ -1165,7 +1115,6 @@ var main = function () {
 	}, {
 		sort: true
 	}));
-
 	//待机场景
 	T.scene("ready", new T.Scene(function (stage) {
 		stage.merge('interactive');
@@ -1173,6 +1122,7 @@ var main = function () {
 		if (bgmusic) bgmusic.pause();
 		bgmusic = T.getAsset('start.mp3');
 		bgmusic.loop = true;
+		bgmusic.volume = 1;
 		bgmusic.play();
 		var bg = new BG('bg_ready.png');
 		stage.add(bg);
@@ -1221,9 +1171,6 @@ var main = function () {
 		stage.merge("interactive");
 		var bg = new BG('bg_ready.png');
 		stage.add(bg);
-		// var nanhai=new AnimPlayer({x:300,y:300,w:250,h:350});
-		// nanhai.setAnimSheet("sheet_nanhai","nanhai");
-		// stage.add(nanhai);
 		record.weather = Math.random() > 0.5 ? 'sun' : 'rain';
 		level = 0;
 		duihuaindex = 1;
@@ -1235,11 +1182,7 @@ var main = function () {
 			x: 550,
 			y: 400
 		});
-		nanhai.on("down", function () {
-			record.sex = 'boy';
-			setStorage();
-			T.stageScene('newgame');
-		});
+		nanhai.on("down", boydj);
 		stage.add(nanhai);
 		var boy = new AnimPlayer({
 			y: 280,
@@ -1248,10 +1191,8 @@ var main = function () {
 			h: 130
 		});
 		boy.setAnimSheet("sheet_boy", 'boy');
+		boy.down = boydj;
 		stage.add(boy);
-		// var nvhai=new AnimPlayer({x:800,y:300,w:200,h:350});
-		// nvhai.setAnimSheet("sheet_nvhai","nvhai");
-		// stage.add(nvhai);
 		var nvhai = new T.Sprite({
 			asset: 'gs_nv.png',
 			w: 172,
@@ -1259,11 +1200,7 @@ var main = function () {
 			x: 900,
 			y: 400
 		});
-		nvhai.on("down", function () {
-			record.sex = 'girl';
-			setStorage();
-			T.stageScene('newgame');
-		});
+		nvhai.on("down", girldj);
 		stage.add(nvhai);
 		var girl = new AnimPlayer({
 			x: 900,
@@ -1271,15 +1208,26 @@ var main = function () {
 			w: 200,
 			h: 130
 		});
-		girl.setAnimSheet("sheet_girl", 'girl');
+		girl.setAnimSheet("sheet_girl", 'boy');
+		girl.down = girldj;
 		stage.add(girl);
+		function boydj() {
+			record.sex = 'boy';
+			setStorage();
+			T.stageScene('newgame');
+		}
+
+		function girldj() {
+			record.sex = 'girl';
+			setStorage();
+			T.stageScene('newgame');
+		}
 	}, {
 		sort: true
 	}));
 
 	T.scene('xuanguan', new T.Scene(function (stage) {
 		stage.merge('interactive');
-		// console.log('xuanguan');
 		stage.add(new ChooseLevel());
 	}, {
 		sort: true
@@ -1322,14 +1270,19 @@ var main = function () {
 			bg.asset = 'bg4.png';
 			if (duihuaindex == 6)bgmusic = T.getAsset('gonglu.mp3');
 		} else if (level == 4) {
-			bg.asset = 'cj5.png';
-			if (duihuaindex == 7)bgmusic = T.getAsset('waipojia.mp3');
+			if (duihuaindex == 7) {
+				bgmusic = T.getAsset('waipojia.mp3');
+				bg.asset = 'cj5.png';
+			} else {
+				bg.asset = 'bg5.png';
+			}
 		}
 		bgmusic.loop = true;
+		bgmusic.volume = 1;
 		bgmusic.play();
 		bg.down = function () {
-			// if (!xiaolu.over) return;
-			if (duihuaindex == 2 || duihuaindex == 5) T.stageScene('newgame');
+			if (!xiaolu.over) return;
+			if (duihuaindex == 2 || duihuaindex == 5 || duihuaindex == 8) T.stageScene('newgame');
 			else T.stageScene('game');
 		};
 		stage.add(bg);
@@ -1342,6 +1295,9 @@ var main = function () {
 	T.scene("game", new T.Scene(function (stage) {
 		stage.merge('interactive');
 		stage_g = stage;
+		addedclear = clear_g = false;
+		part_g = null;
+		bgmusic.volume = 1;
 		stage.add(new Background());
 		picture_c = new Picture();
 		stage.add(picture_c);
@@ -1363,9 +1319,10 @@ var main = function () {
 		sort: true
 	}));
 
+
 	////(3)加载资源
 	T.load(['bg_ready.png', 'clear.png', 'effect.png', 'buling.png', 'onceagain.png', 'next.png', 'fanhuianniu.png',
-			'bg3.png', 'cj3.png', 'bg4.png', 'kaipian.png', 'heidaokeji.png', 'huoxuangongzuoshi.png', 'kaichang_a.png', 'kaichang_b.png', 'kaichang_anim.png', 'xz_nanhai.png', 'xz_nvhai.png', 'game_start.png', 'game_continue.png', "bg0_boy_sunny.png", "bg0_boy_rain.png", "bg0_girl_rain.png", "bg0_girl_sunny.png", '2g1.png', '2g2.png', '2g3.png', '2g4.png', '2g5.png', '2g6.png', '2g7.png', 'bg2_boy.png', 'bg2_girl.png', 'bg1nr.png', 'bg1nl.png', 'bg1nvl.png', 'bg1nvr.png', '1_nr1.png', '1_nr2.png', '1_nr3.png', '1_nr4.png', '1_nl1.png', '1_nl2.png', '1_nl3.png', '1_nl4.png', '1_nvr1.png', '1_nvr2.png', '1_nvr3.png', '1_nvr4.png', '1_nvl1.png', '1_nvl2.png', '1_nvl3.png', '1_nvl4.png', 'gs_nan.png', 'gs_nv.png', 'daishu.mp3', 'en_changjinglu.mp3', 'en_daishu.mp3', 'en_houzi.mp3', 'en_xiong.mp3', 'houzi.mp3', 'huo3che.mp3', 'huo4che.mp3', 'jingche.mp3', 'qiche.mp3', 'lang.mp3', 'xiong.mp3', 'cj5.png', 'bg5.png', 'bg5_nainai.png', '5_1.png', '5_2.png', '5_3.png', '5_4.png', '5_6.png', '5_7.png', 'title.png', 'jiantou.png', 'd2gn.png', 'd2gnv.png', 'd3g.png', 'd4g.png', 'd5g.png', 'diertian.png', 'diyitian_nan.png', 'diyitian_nv.png', 'xuanzebeijing.png', 'nanhai.png', 'nvhai.png', 'dh1yu.png', 'dh1qing.png', 'dh2.png', 'dh3.png', 'dh4.png', 'dh5.png', 'dh6.png', 'dh7.png', 'dh8.png', '1qing.mp3', '1yu.mp3', '2.mp3', '3.mp3', '4.mp3', '5.mp3', '6.mp3', '7.mp3', '8.mp3', 'en_quanjiafu.mp3', 'en_maoyi.mp3', 'en_maomi.mp3', 'en_maoxian.mp3', 'en_tanzi.mp3', 'dccup.png', 'dckuzi.png', 'dcmaojin.png', 'dcmaomi.png', 'dcmaoxiantuan.png', 'dcmaoyi.png', 'dcquanjiafu.png', 'dcqunku.png', 'dcreshui.png', 'dcshuzi.png', 'dctanzi.png', 'dcwazi.png', 'dcxiangzao.png', 'dcxiezi.png', 'dcyagao.png', 'dcyashua.png', 'dcyifu.png', 'start.mp3', 'qichuang.mp3', 'xishu.mp3', 'dongwuyuan.mp3', 'gonglu.mp3', 'waipojia.mp3', '4_gaotie.png', '4_gongjiaoche.png', '4_jiaoche.png', '4_jingche.png', '4_xiaofangche.png', '4_zixingche.png', '3_changjinglu.png', '3_daishu.png', '3_houzi.png', '3_lang.png', '3_xiong.png'
+			'bg3.png', 'cj3.png', 'bg4.png', 'kaipian.png', 'heidaokeji.png', 'huoxuangongzuoshi.png', 'kaichang_a.png', 'kaichang_b.png', 'kaichang_anim.png', 'xz_nanhai.png', 'xz_nvhai.png', 'game_start.png', 'game_continue.png', "bg0_boy_sunny.png", "bg0_boy_rain.png", "bg0_girl_rain.png", "bg0_girl_sunny.png", '2g1.png', '2g2.png', '2g3.png', '2g4.png', '2g5.png', '2g6.png', '2g7.png', 'bg2_boy.png', 'bg2_girl.png', 'bg1nr.png', 'bg1nl.png', 'bg1nvl.png', 'bg1nvr.png', '1_nr1.png', '1_nr2.png', '1_nr3.png', '1_nr4.png', '1_nl1.png', '1_nl2.png', '1_nl3.png', '1_nl4.png', '1_nvr1.png', '1_nvr2.png', '1_nvr3.png', '1_nvr4.png', '1_nvl1.png', '1_nvl2.png', '1_nvl3.png', '1_nvl4.png', 'gs_nan.png', 'gs_nv.png', 'daishu.mp3', 'en_changjinglu.mp3', 'en_daishu.mp3', 'en_houzi.mp3', 'en_xiong.mp3', 'houzi.mp3', 'huo3che.mp3', 'huo4che.mp3', 'jingche.mp3', 'qiche.mp3', 'lang.mp3', 'xiong.mp3', 'cj5.png', 'bg5.png', 'bg5_nainai.png', '5_1.png', '5_2.png', '5_3.png', '5_4.png', '5_6.png', '5_7.png', 'title.png', 'jiantou.png', 'd2gn.png', 'd2gnv.png', 'd3g.png', 'd4g.png', 'd5g.png', 'diertian.png', 'diyitian_nan.png', 'diyitian_nv.png', 'xuanzebeijing.png', 'nanhai.png', 'nvhai.png', 'dh1yu.png', 'dh1qing.png', 'dh2.png', 'dh3.png', 'dh4.png', 'dh5.png', 'dh6.png', 'dh7.png', 'dh8.png', 'dh9.png', '1qing.mp3', '1yu.mp3', '2.mp3', '3.mp3', '4.mp3', '5.mp3', '6.mp3', '7.mp3', '8.mp3', '9.mp3', 'en_quanjiafu.mp3', 'en_maoyi.mp3', 'en_maomi.mp3', 'en_maoxian.mp3', 'en_tanzi.mp3', 'dccup.png', 'dckuzi.png', 'dcmaojin.png', 'dcmaomi.png', 'dcmaoxiantuan.png', 'dcmaoyi.png', 'dcquanjiafu.png', 'dcqunku.png', 'dcreshui.png', 'dcshuzi.png', 'dctanzi.png', 'dcwazi.png', 'dcxiangzao.png', 'dcxiezi.png', 'dcyagao.png', 'dcyashua.png', 'dcyifu.png', 'start.mp3', 'qichuang.mp3', 'xishu.mp3', 'dongwuyuan.mp3', 'gonglu.mp3', 'waipojia.mp3', '4_gaotie.png', '4_gongjiaoche.png', '4_jiaoche.png', '4_jingche.png', '4_xiaofangche.png', '4_zixingche.png', '3_changjinglu.png', '3_daishu.png', '3_houzi.png', '3_lang.png', '3_xiong.png', 'lu_nan.png', 'lu_nv.png', 'luyan_nan.png', 'luyan_nv.png', 'dcchangjinglu.png', 'dcdaishu.png', 'dcgaotie.png', 'dcgongjiaoche.png', 'dchouzi.png', 'dcjiaoche.png', 'dcjingche.png', 'dclang.png', 'dcxiaofangche.png', 'dcxiong.png', 'dczixingche.png'
 		],
 		function () {
 			T.sheet("sheet_effect", "effect.png", {
@@ -1404,77 +1361,26 @@ var main = function () {
 				tw: 501,
 				th: 363
 			});
+			T.sheet("sheet_lynan", 'luyan_nan.png', {tw: 279, th: 138});
+			T.sheet("sheet_lynv", 'luyan_nv.png', {tw: 309, th: 138});
 			_.each([
-				["effect", {
-					anim: {
-						frames: _.range(0, 5),
-						rate: 1 / 4
-					}
-				}],
-				["buling", {
-					anim: {
-						frames: _.range(0, 6),
-						rate: 1 / 5
-					}
-				}],
+				["effect", {anim: {frames: _.range(0, 5), rate: 1 / 4}}],
+				["buling", {anim: {frames: _.range(0, 6), rate: 1 / 5}}],
 				["kaipian", {
-					anim: {
-						frames: _.range(0, 5),
-						rate: 1 / 3
-					},
-					idle: {
-						frames: [0],
-						rate: 1
-					}
+					anim: {frames: _.range(0, 5), rate: 1 / 3},
+					idle: {frames: [0], rate: 1}
 				}],
 				["kcanim", {
-					anim: {
-						frames: _.range(0, 11),
-						rate: 1 / 5
-					},
-					idle: {
-						frames: [10],
-						rate: 1
-					}
+					anim: {frames: _.range(0, 11), rate: 1 / 7},
+					ready: {frames: [0], rate: 1},
+					idle: {frames: [10], rate: 1}
 				}],
 				["nanhai", {
-					anim: {
-						frames: _.range(0, 4),
-						rate: 1 / 3
-					},
-					idle: {
-						frames: [0],
-						rate: 1
-					}
+					anim: {frames: _.range(0, 4), rate: 1 / 3},
+					idle: {frames: [0], rate: 1}
 				}],
-				["nvhai", {
-					anim: {
-						frames: _.range(0, 4),
-						rate: 1 / 3
-					},
-					idle: {
-						frames: [0],
-						rate: 1
-					}
-				}],
-				["boy", {
-					anim: {
-						frames: _.range(1, 4),
-						rate: 1 / 3
-					}
-				}],
-				["girl", {
-					anim: {
-						frames: _.range(1, 4),
-						rate: 1 / 3
-					}
-				}],
-				["title", {
-					anim: {
-						frames: _.range(0, 3),
-						rate: 1 / 2
-					}
-				}]
+				["boy", {anim: {frames: _.range(1, 4), rate: 1 / 3}}],
+				["title", {anim: {frames: _.range(0, 3), rate: 1 / 2}}]
 			], function (anim) {
 				T.fas(anim[0], anim[1]);
 			});
@@ -1494,26 +1400,22 @@ var main = function () {
 		}
 	);
 
-
-	//(4)函数
-
 	//碰撞函数,p传要拼的能移动的那个部分，b传不会动的空白
 	function contact(p, b) {
-		var px = p.x - ((p.rw || p.w) / 2 - 20);
-		var pxx = p.x + ((p.rw || p.w) / 2 - 20);
-		var py = p.y - ((p.rh || p.h) / 2 - 20);
-		var pyy = p.y + ((p.rh || p.h) / 2 - 20);
-		var bx = b.x - ((b.rw || b.w) / 2 - 20);
-		var bxx = b.x + ((b.rw || b.w) / 2 - 20);
-		var by = b.y - ((b.rh || b.h) / 2 - 20);
-		var byy = b.y + ((b.rh || b.h) / 2 - 20);
+		var px = p.x - ((p.rw || p.w) / 4);
+		var pxx = p.x + ((p.rw || p.w) / 4);
+		var py = p.y - ((p.rh || p.h) / 4);
+		var pyy = p.y + ((p.rh || p.h) / 4);
+		var bx = b.x - ((b.rw || b.w) / 4);
+		var bxx = b.x + ((b.rw || b.w) / 4);
+		var by = b.y - ((b.rh || b.h) / 4);
+		var byy = b.y + ((b.rh || b.h) / 4);
 		return !(pxx <= bx || pyy <= by || px >= bxx || py >= byy);
 	}
 
-	//判断是不是相同的东西，判断碰撞没,p传要拼的能移动的那个部分，b传不会动的空白
+	//判断是不是相同的东西，判断碰撞没,p传要拼的能移动的那个部分，b传不会动的空白,wh:weather
 	function isThisPart(p, b) {
-		if (level == 0) return (p.wh == b.wh && p.index == b.index && contact(p, b));
-		return (p.index == b.index && contact(p, b));
+		return p.wh == b.wh && p.index == b.index && contact(p, b);
 	}
 
 	//判断位置，能否贴上
@@ -1521,8 +1423,7 @@ var main = function () {
 		var parts = picture_c.parts;
 		for (var i = 0; i < parts.length; i++) {
 			if (isThisPart(p, parts[i])) {
-				p.movetarget = parts[i];
-				p.down = false;
+				p.movetarget = deepCopy(parts[i]);
 				p.ok = true;
 				picture_c.parts.splice(i, 1); //拼好的就移除
 				return;
@@ -1555,7 +1456,7 @@ var main = function () {
 	}
 
 	function upfunc(e) {
-		if ((stage_g && stage_g.paused) || part_g == null) return;
+		if (clear_g || part_g == null) return;
 		judgePosition(part_g);
 		if (part_g.ok) {
 			down_g = false;
@@ -1588,5 +1489,13 @@ var main = function () {
 			point.y /= T.scale.y;
 		}
 		return point;
+	}
+
+	function deepCopy(source) {
+		var result = {};
+		for (var key in source) {
+			result[key] = typeof source[key] == 'object' ? deepCopy(source[key]) : source[key];
+		}
+		return result;
 	}
 };
