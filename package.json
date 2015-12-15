@@ -1,0 +1,11 @@
+{
+	"name":"儿童贴图游戏-火旋工作室",
+	"main":"index.html",
+	"author":"火旋工作室",
+	
+	"window":{
+	"width":1280,
+	"height":720,
+	"toolbar":false
+	}
+}
